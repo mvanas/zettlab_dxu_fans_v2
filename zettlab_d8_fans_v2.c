@@ -1,4 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0
+/*
+ * Zettlab D6U/D8U Ultra hwmon fan driver
+ *
+ * Original concept and first implementation:
+ *   Dean Holland <speedster@haveacry.com>
+ *   https://github.com/Haveacry/zettlab-d8-fans
+ *
+ * v2 rewrite:
+ *   Marcel van As
+ */
 #include <linux/device.h>
 #include <linux/err.h>
 #include <linux/hwmon.h>
@@ -309,6 +319,7 @@ static void __exit zettlab_exit(void)
 }
 
 MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Marcel van As");
 MODULE_AUTHOR("Dean Holland (speedster@haveacry.com)");
 MODULE_DESCRIPTION("Zettlab D6U/D8U Ultra hwmon fan driver");
 
