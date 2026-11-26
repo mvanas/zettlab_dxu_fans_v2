@@ -100,6 +100,59 @@ sensors
 - Actual `.remove()` path that cancels the watchdog and re-applies
   safe PWM
 
+## Version history
+
+### 0.1.0 (current)
+
+The first stable DKMS release of the v2 driver. Built and validated
+on kernel `6.18.52-production+truenas` (TrueNAS SCALE).
+
+- **Linux 6.11+ compatibility**: the platform driver `.remove()`
+  callback now uses the `void` return type required since kernel
+  6.11; earlier kernels with the old `int` signature were unaffected
+  by the v2 rewrite but 6.11+ builds failed without this fix
+  (commit `148ca15`)
+- **Explicit kernel headers**: includes for `linux/io.h`,
+  `linux/ioport.h`, `linux/jiffies.h`, `linux/mutex.h` and friends
+  were made explicit instead of relying on transitive includes,
+  keeping the build stable across kernel versions
+- **Clean upgrade path**: supersedes the original `0.0.1` DKMS
+  package (remove it before installing, see Installation above);
+  both versions use the module name `zettlab_d8_fans`, so only one
+  may be installed at a time
+- Verified in daily operation together with the
+  [fan-control.sh](https://github.com/mvanas/zettlab-truenas)
+  userspace controller (heartbeat every control cycle, safe-PWM
+  events observable via `dmesg`)
+
+### 0.0.1 (superseded)
+
+The original v1 driver by Dean Holland
+([Haveacry/zettlab-d8-fans](https://github.com/Haveacry/zettlab-d8-fans)).
+Worked on kernels before 6.11 but had the resource-management and
+registration-order issues listed under "Changes vs v1".
+
+## Future improvements
+
+Reviewed but deliberately not implemented; recorded here so the
+reasoning is not lost:
+
+- **DMI board detection** — gating `module_init` on a
+  `dmi_check_system()` match table (plus a `force=1` module parameter
+  as escape hatch) would prevent the driver from probing an MMIO
+  region on non-Zettlab hardware. **Not needed at this time**:
+  Zettlab is not expected to produce further board revisions, and
+  the driver realistically only runs on D6U/D8U units. Revisit only
+  if new board revisions appear, in which case the refusal message
+  should log the board's actual DMI strings so users can report
+  them.
+- **Configurable watchdog interval** — the 10 s watchdog tick is
+  hardcoded; the *timeout* is already a module parameter, so a
+  second knob adds test surface without operational benefit.
+- **`dev_dbg()` on rejected PWM writes** — mild troubleshooting
+  value for malformed `echo` commands; not worth a DKMS rebuild on
+  its own.
+
 ## License
 
 GPL-2.0. Original concept and first implementation by Dean Holland
