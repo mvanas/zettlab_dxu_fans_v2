@@ -19,10 +19,12 @@
 #include <linux/err.h>
 #include <linux/hwmon.h>
 #include <linux/io.h>
+#include <linux/ioport.h>
 #include <linux/jiffies.h>
 #include <linux/module.h>
 #include <linux/mutex.h>
 #include <linux/platform_device.h>
+#include <linux/slab.h>
 #include <linux/workqueue.h>
 
 #define DRIVER_NAME     "zettlab_d8_fans"
@@ -236,7 +238,7 @@ static int zettlab_read(struct device *dev, enum hwmon_sensor_types type,
 			break;
 		case hwmon_pwm_enable:
 			*val = data->pwm_enable[channel];
-		ret = 0;
+			ret = 0;
 			break;
 		default:
 			ret = -EOPNOTSUPP;
@@ -300,9 +302,9 @@ static int zettlab_write(struct device *dev, enum hwmon_sensor_types type,
 				break;
 			}
 			/*
-			 * Auto mode: PWM 0 hands the fan back to the EC
-			 * firmware (validated on D6U/D8U hardware).
-			 */
+				 * Auto mode: PWM 0 hands the fan back to the EC
+				 * firmware (validated on D6U/D8U hardware).
+				 */
 			data->pwm_enable[channel] = PWM_MODE_AUTO;
 			zettlab_write_pwm(data, channel, 0);
 			ret = 0;
@@ -427,7 +429,7 @@ static int zettlab_probe(struct platform_device *pdev)
 	return 0;
 }
 
-static int zettlab_remove(struct platform_device *pdev)
+static void zettlab_remove(struct platform_device *pdev)
 {
 	struct zettlab_data *data = platform_get_drvdata(pdev);
 
@@ -442,8 +444,6 @@ static int zettlab_remove(struct platform_device *pdev)
 	mutex_lock(&data->lock);
 	zettlab_force_safe_pwm(data);
 	mutex_unlock(&data->lock);
-
-	return 0;
 }
 
 static struct platform_driver zettlab_driver = {
